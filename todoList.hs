@@ -39,6 +39,15 @@ sortByImportance = sortOn (Down . importance)
 {-
 		READING FILE
 -}
+
+readTaskList :: IO [Task] 
+readTaskList = do
+	taskListFile <- openFile "taskList.txt" ReadMode
+	taskList <- readFileLines taskListFile
+	hClose taskListFile
+	return(taskList)
+
+
 -- reads the file and turns each entry into a list of Tasks
 readFileLines :: Handle -> IO [Task]
 readFileLines taskListFile = do
@@ -81,19 +90,28 @@ turnLineIntoTask line =
 -}
 
 -- write tasklist back to file
-saveListToFile :: [Task] -> IO ()
-saveListToFile taskList = do
-	let stringList = listToString taskList
+saveAndClose :: [Task] -> IO ()
+saveAndClose taskList = do
+	let stringList = unpackToString taskList
 
 	taskListFile <- openFile "taskList.txt" WriteMode
 
 	recursiveAddToFile stringList taskListFile
 	hClose taskListFile
-	putStrLn("saved. have a nice day :)")
+
+saveAndContinue :: [Task] -> IO [Task] 
+saveAndContinue taskList = do
+	saveAndClose taskList
+	newTaskList <- readTaskList
+	return(newTaskList)
 
 
-listToString :: [Task] -> [String]
-listToString taskList = map taskFormat taskList
+unpackToString :: [Task] -> [String]
+unpackToString taskList = map unpackList taskList
+
+unpackList :: Task -> String
+unpackList task = 
+	name task ++ "," ++ uniModule task ++ "," ++ dueDate task ++ "," ++ show (importance task)
 
 recursiveAddToFile :: [String] -> Handle -> IO ()
 recursiveAddToFile [] _ = return ()
@@ -153,11 +171,13 @@ mainLoop taskList = do
     case opt of
         '1' -> do
             newList <- appendTask taskList
-            mainLoop newList
+            updatedList <- saveAndContinue newList
+            mainLoop updatedList
         '2' -> do
             newList <- finishTask taskList
-            mainLoop newList
-        _   -> saveListToFile taskList
+            updatedList <- saveAndContinue newList
+            mainLoop updatedList
+        _   -> saveAndClose taskList
 	 	
 
 clearConsole :: IO ()
@@ -223,9 +243,7 @@ finishTask taskList = do
 
 main = do 
 	-- open the file and then read it line by line
-	taskListFile <- openFile "taskList.txt" ReadMode
-	taskList <- readFileLines taskListFile
-	hClose taskListFile
+	taskList <- readTaskList
 
 	-- and then send it off to the main loop!
 	mainLoop taskList

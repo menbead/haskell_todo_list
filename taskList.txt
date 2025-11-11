@@ -1,16 +1,2 @@
-testQuiz
-    Module     : COM1001
-    Due Date   : August
-    Importance : High
-testExam
-    Module     : COM2004
-    Due Date   : January 1 2026
-    Importance : High
-testCoursework
-    Module     : COM2008
-    Due Date   : June
-    Importance : Medium
-testHomework
-    Module     : COM2100
-    Due Date   : December 1 2025
-    Importance : Low
+testExam,COM1001,January,High
+testHomework,COM1010,November 30,Low
