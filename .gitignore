@@ -1,3 +1,4 @@
 *.o
 *.hi
 todolist.exe
+Icon.rc
