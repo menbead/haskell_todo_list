@@ -1,6 +1,7 @@
 import Data.List
 import Data.List.Split
 import Data.Char
+import Data.Ord (Down(..))
 import System.IO
 import System.Console.ANSI
 
@@ -12,9 +13,6 @@ import System.Console.ANSI
 ====== UNUSED ======
 -- module enum
 data UniModules = COM2004 | COM2008 | COM2108 | COM2109
-
--- importance enum
-data Importance = Low | Medium | High 
 ====== ====== ======
 -}
 
@@ -23,8 +21,20 @@ data Importance = Low | Medium | High
 data Task = Task { name :: String,
 				   uniModule :: String,
 				   dueDate :: String, 
-				   importance :: String 
-				 } deriving (Eq, Show)
+				   importance :: Importance 
+				 } deriving (Show)
+
+-- importance enum
+data Importance = Low | Medium | High deriving (Show, Eq, Ord)
+
+stringToImportance :: String -> Importance
+stringToImportance s 
+	| s == "High" = High
+	| s == "Medium" = Medium
+	| otherwise = Low
+
+sortByImportance :: [Task] -> [Task]
+sortByImportance = sortOn (Down . importance)
 
 {-
 		READING FILE
@@ -48,8 +58,7 @@ readFileLines taskListFile = do
 			restOfLines <- readFileLines taskListFile
 
 			-- construct the list of tasks
-			let taskList = task : restOfLines
-
+			let taskList = sortByImportance $ task : restOfLines
 			return (taskList)
 
 -- reads a line and turns it into a Task
@@ -62,7 +71,7 @@ turnLineIntoTask line =
 	in Task {name = listOfWords !! 0, 
 			 uniModule = listOfWords !! 1, 
 			 dueDate = listOfWords !! 2, 
-		 	 importance = listOfWords !! 3 
+		 	 importance = stringToImportance $ listOfWords !! 3 
 		 	}
 
 
@@ -84,11 +93,7 @@ saveListToFile taskList = do
 
 
 listToString :: [Task] -> [String]
-listToString taskList = map unpackList taskList
-
-unpackList :: Task -> String
-unpackList task = 
-	name task ++ "," ++ uniModule task ++ "," ++ dueDate task ++ "," ++ importance task
+listToString taskList = map taskFormat taskList
 
 recursiveAddToFile :: [String] -> Handle -> IO ()
 recursiveAddToFile [] _ = return ()
@@ -103,7 +108,10 @@ recursiveAddToFile (x:xs) hdl = do
 -- decides task format
 taskFormat :: Task -> String
 taskFormat task = 
-	name task ++ "\n    Module     : " ++ uniModule task ++ "\n    Due Date   : " ++ dueDate task ++ "\n    Importance : " ++ importance task
+	name task ++ 
+	"\n    Module     : " ++ uniModule task ++ 
+	"\n    Due Date   : " ++ dueDate task ++ 
+	"\n    Importance : " ++ show (importance task)
 
 -- writes the task list neatly
 printTaskList :: [Task] -> IO ()
@@ -170,9 +178,11 @@ makeNewTask = do
 	uniModule <- getLine
 	putStrLn("when is it due?: ")
 	dueDate <- getLine
-	putStrLn("and how important is it to get done?: ")
+	putStrLn("and how important is it to get done?")
+	putStrLn("please type either \"High\", \"Medium\", or \"Low\"")
 	inputImp <- getLine
-	let importance = decideImportance . head $ map toLower inputImp
+	let importance = stringToImportance . decideImportance . head $ map toLower inputImp
+
 
 	return (Task {name = name, 
 			 uniModule = uniModule, 
@@ -190,9 +200,9 @@ decideImportance s
 appendTask :: [Task] -> IO [Task]
 appendTask taskList = do
 	task <- makeNewTask
-	let newTaskList = task : taskList
-	return newTaskList
+	let newTaskList = sortByImportance $ task : taskList
 
+	return newTaskList
 
 
 
@@ -206,7 +216,8 @@ finishTask taskList = do
 	putStrLn("what is the name of the task you have finished?: ")
 	findName <- getLine
 
-	let newTaskList = filter (\x -> name x /= findName) taskList
+	let newTaskList = sortByImportance $ filter (\x -> name x /= findName) taskList
+
 	return newTaskList
 
 
