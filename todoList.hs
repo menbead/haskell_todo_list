@@ -1,5 +1,6 @@
 import Data.List
 import Data.List.Split
+import Data.Char
 import System.IO
 import System.Console.ANSI
 
@@ -10,21 +11,20 @@ import System.Console.ANSI
 {-
 ====== UNUSED ======
 -- module enum
-data UniModules = COM2004 | COM2008 | COM2108 | COM2109 
+data UniModules = COM2004 | COM2008 | COM2108 | COM2109
 
 -- importance enum
-data Importance = Low | Medium | High
+data Importance = Low | Medium | High 
 ====== ====== ======
 -}
+
 
 -- contains: name, uniModule, dueDate, importance
 data Task = Task { name :: String,
 				   uniModule :: String,
 				   dueDate :: String, 
 				   importance :: String 
-				 } deriving (Show)
-
-
+				 } deriving (Eq, Show)
 
 {-
 		READING FILE
@@ -64,7 +64,6 @@ turnLineIntoTask line =
 			 dueDate = listOfWords !! 2, 
 		 	 importance = listOfWords !! 3 
 		 	}
-
 
 
 {- 
@@ -172,13 +171,20 @@ makeNewTask = do
 	putStrLn("when is it due?: ")
 	dueDate <- getLine
 	putStrLn("and how important is it to get done?: ")
-	importance <- getLine
+	inputImp <- getLine
+	let importance = decideImportance . head $ map toLower inputImp
 
 	return (Task {name = name, 
 			 uniModule = uniModule, 
 			 dueDate = dueDate, 
 		 	 importance = importance 
 		 	})
+
+decideImportance :: Char -> String
+decideImportance s 
+			| s == 'h' = "High" 
+			| s == 'm' = "Medium"
+			| otherwise = "Low"
 
 -- save task to list
 appendTask :: [Task] -> IO [Task]

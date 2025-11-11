@@ -1,2 +1,2 @@
-data driven exam,COM2004,January,High
-group project,COM2008,December,Medium
+testQuiz,COM1001,August,High
+testExam,COM2004,January 1 2026,High
